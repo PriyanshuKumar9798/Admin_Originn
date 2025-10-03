@@ -1,50 +1,58 @@
-import React, { useState } from 'react'
-import { Check, X, Building2, Mail, Phone, MapPin, Globe, Calendar, Users, DollarSign } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Check, X, Building2, Mail, Phone, MapPin, Calendar, Users } from 'lucide-react'
+
+const API_BASE = process.env.API_BASE // adjust if different
 
 const StartupProfile = () => {
-  const [startups, setStartups] = useState([
-    {
-      id: 1,
-      name: "TechVenture AI",
-      founder: "Sarah Johnson",
-      email: "sarah@techventure.ai",
-      phone: "+1 (555) 123-4567",
-      location: "San Francisco, CA",
-      website: "www.techventure.ai",
-      foundedDate: "2023",
-      industry: "Artificial Intelligence",
-      teamSize: "15-20",
-      fundingStage: "Seed",
-      description: "Building next-generation AI tools for enterprise automation and workflow optimization.",
-      status: "pending"
-    },
-    {
-      id: 2,
-      name: "GreenEnergy Solutions",
-      founder: "Michael Chen",
-      email: "michael@greenenergy.io",
-      phone: "+1 (555) 987-6543",
-      location: "Austin, TX",
-      website: "www.greenenergy.io",
-      foundedDate: "2022",
-      industry: "Clean Energy",
-      teamSize: "25-30",
-      fundingStage: "Series A",
-      description: "Developing sustainable energy solutions for residential and commercial applications.",
-      status: "pending"
-    }
-  ])
+  const [startups, setStartups] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const handleAccept = (id) => {
-    setStartups(startups.map(startup => 
-      startup.id === id ? { ...startup, status: 'accepted' } : startup
-    ))
+  // Fetch pending startups
+  useEffect(() => {
+    const fetchStartups = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/startups/pending`)
+        const data = await res.json()
+        console.log('res', data);
+        
+        setStartups(data)
+      } catch (error) {
+        console.error("Error fetching startups:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchStartups()
+  }, [])
+
+  // Accept startup
+  const handleAccept = async (id) => {
+    try {
+      await fetch(`${API_BASE}/startups/${id}/accept`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" }
+      })
+      setStartups(startups.map(startup => 
+        startup._id === id ? { ...startup, status: 'accepted' } : startup
+      ))
+    } catch (error) {
+      console.error("Error accepting startup:", error)
+    }
   }
 
-  const handleReject = (id) => {
-    setStartups(startups.map(startup => 
-      startup.id === id ? { ...startup, status: 'rejected' } : startup
-    ))
+  // Reject startup
+  const handleReject = async (id) => {
+    try {
+      await fetch(`${API_BASE}/startups/${id}/reject`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" }
+      })
+      setStartups(startups.map(startup => 
+        startup._id === id ? { ...startup, status: 'rejected' } : startup
+      ))
+    } catch (error) {
+      console.error("Error rejecting startup:", error)
+    }
   }
 
   const getStatusBadge = (status) => {
@@ -65,30 +73,31 @@ const StartupProfile = () => {
     )
   }
 
+  if (loading) {
+    return <div className="text-center p-10 text-gray-500">Loading startup profiles...</div>
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-6 sm:mb-8 text-center sm:text-left">
           <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-2">Startup Profiles</h1>
           <p className="text-gray-600 text-sm sm:text-base">Review and manage startup applications</p>
         </div>
 
-        {/* Cards */}
         <div className="grid gap-6">
           {startups.map((startup) => (
-            <div 
-              key={startup.id} 
-              className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300"
-            >
-              {/* Header Gradient */}
+            <div key={startup._id} className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+              {/* Header */}
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 sm:p-6 text-white">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <Building2 size={28} className="sm:w-8 sm:h-8" />
                     <div>
-                      <h2 className="text-lg sm:text-2xl font-bold">{startup.name}</h2>
-                      <p className="text-indigo-100 text-xs sm:text-sm">Founded by {startup.founder}</p>
+                      <h2 className="text-lg sm:text-2xl font-bold">{startup.companyName}</h2>
+                      <p className="text-indigo-100 text-xs sm:text-sm">
+                        Founded by {startup.founderTitle} {startup.founderName}
+                      </p>
                     </div>
                   </div>
                   {getStatusBadge(startup.status)}
@@ -102,19 +111,19 @@ const StartupProfile = () => {
                   <div className="space-y-3 sm:space-y-4">
                     <div className="flex items-center gap-2 text-gray-700 text-sm sm:text-base break-all">
                       <Mail size={18} className="text-indigo-600" />
-                      <span>{startup.email}</span>
+                      <span>{startup.founderMail}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-700 text-sm sm:text-base">
                       <Phone size={18} className="text-indigo-600" />
-                      <span>{startup.phone}</span>
+                      <span>{startup.founderPhone}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-700 text-sm sm:text-base">
                       <MapPin size={18} className="text-indigo-600" />
-                      <span>{startup.location}</span>
+                      <span>{startup.address}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-700 text-sm sm:text-base break-all">
-                      <Globe size={18} className="text-indigo-600" />
-                      <span>{startup.website}</span>
+                    <div className="flex items-center gap-2 text-gray-700 text-sm sm:text-base">
+                      <Building2 size={18} className="text-indigo-600" />
+                      <span>Institute: {startup.instituteName}</span>
                     </div>
                   </div>
 
@@ -122,19 +131,15 @@ const StartupProfile = () => {
                   <div className="space-y-3 sm:space-y-4">
                     <div className="flex items-center gap-2 text-gray-700 text-sm sm:text-base">
                       <Calendar size={18} className="text-indigo-600" />
-                      <span>Founded: {startup.foundedDate}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-700 text-sm sm:text-base">
-                      <Building2 size={18} className="text-indigo-600" />
-                      <span>Industry: {startup.industry}</span>
+                      <span>Applied on: {new Date(startup.createdAt).toLocaleDateString()}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-700 text-sm sm:text-base">
                       <Users size={18} className="text-indigo-600" />
-                      <span>Team Size: {startup.teamSize}</span>
+                      <span>Team Members: {startup.teamMembers}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-700 text-sm sm:text-base">
-                      <DollarSign size={18} className="text-indigo-600" />
-                      <span>Stage: {startup.fundingStage}</span>
+                      <Building2 size={18} className="text-indigo-600" />
+                      <span>Stage: {startup.stage}</span>
                     </div>
                   </div>
                 </div>
@@ -143,22 +148,22 @@ const StartupProfile = () => {
                 <div className="mb-6">
                   <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">About</h3>
                   <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
-                    {startup.description}
+                    {startup.about}
                   </p>
                 </div>
 
-                {/* Buttons & Status */}
+                {/* Buttons */}
                 {startup.status === 'pending' && (
                   <div className="flex flex-col sm:flex-row gap-3">
                     <button
-                      onClick={() => handleAccept(startup.id)}
+                      onClick={() => handleAccept(startup._id)}
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200 text-sm sm:text-base"
                     >
                       <Check size={18} />
                       Accept Application
                     </button>
                     <button
-                      onClick={() => handleReject(startup.id)}
+                      onClick={() => handleReject(startup._id)}
                       className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200 text-sm sm:text-base"
                     >
                       <X size={18} />
@@ -192,4 +197,3 @@ const StartupProfile = () => {
 }
 
 export default StartupProfile
-
