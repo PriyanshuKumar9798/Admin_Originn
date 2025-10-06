@@ -5,11 +5,13 @@ import Layout from "./components/Layout";
 import Dashboard from "./components/Dashboard";
 import Users from "./components/Users";
 import Startups from "./components/Startups";
-import StartupProfile from "./components/StartupProfile";  // Add this import
+import StartupProfile from "./components/StartupProfile";
 import Campaigns from "./components/Campaigns";
 import Content from "./components/Content";
 import Transactions from "./components/Transactions";
 import Analytics from "./components/Analytics";
+import ProductDetails from "./components/ProductDetails";
+import AllStartupsPage from "./components/AllStartups";
 
 function App() {
   return (
@@ -23,13 +25,24 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<Users />} />
           <Route path="startups" element={<Startups />} />
-          <Route path="startup-profile" element={<StartupProfile />} /> {/* Add this route */}
+
+          {/* All startups listing */}
+          <Route path="startup-profile" element={<AllStartupsPage />} />
+
+          {/* Single startup profile with dynamic ID */}
+          <Route
+            path="startup-profile/:startupId"
+            element={<StartupProfile />}
+          />
+
           <Route path="campaigns" element={<Campaigns />} />
           <Route path="content" element={<Content />} />
           <Route path="transactions" element={<Transactions />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="products/:id" element={<ProductDetails />} />
         </Route>
 
+        {/* 404 fallback */}
         <Route
           path="*"
           element={
