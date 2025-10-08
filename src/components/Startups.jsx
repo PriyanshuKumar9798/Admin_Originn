@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Check, X, Clock, Mail, Calendar, ExternalLink, Loader2 } from "lucide-react";
+import {
+  Check,
+  X,
+  Clock,
+  Mail,
+  Calendar,
+  ExternalLink,
+  Loader2,
+  Trash2,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE = "https://firstfound-platform-backend.vercel.app";
@@ -12,7 +21,7 @@ const Startups = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Fetch all startup applications
+  // ✅ Fetch all startup applications
   const fetchApplications = async () => {
     setLoading(true);
     try {
@@ -32,7 +41,7 @@ const Startups = () => {
     fetchApplications();
   }, []);
 
-  // Approve / Reject API call
+  // ✅ Approve / Reject API call
   const handleStatusChange = async (id, newStatus) => {
     try {
       setUpdatingId(id);
@@ -52,6 +61,30 @@ const Startups = () => {
     } catch (err) {
       console.error(err);
       alert(err.message || "Status update failed");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  // ✅ Delete startup
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to permanently delete this startup?"
+    );
+    if (!confirmDelete) return;
+
+    try {
+      setUpdatingId(id);
+      const res = await fetch(`${API_BASE}/startup/${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to delete startup");
+
+      setApplications((prev) => prev.filter((app) => app._id !== id));
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to delete startup");
     } finally {
       setUpdatingId(null);
     }
@@ -107,27 +140,43 @@ const Startups = () => {
             Startup Registration Admin Panel
           </h1>
           <p className="text-gray-600 text-sm sm:text-base">
-            Review and manage startup applications
+            Review, manage, and delete startup applications
           </p>
         </div>
 
         {/* Statistics */}
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="bg-white p-4 sm:p-6 rounded-xl shadow">
-            <div className="text-gray-500 text-xs sm:text-sm font-medium mb-1">Total Applications</div>
-            <div className="text-xl sm:text-3xl font-bold text-gray-800">{stats.total}</div>
+            <div className="text-gray-500 text-xs sm:text-sm font-medium mb-1">
+              Total Applications
+            </div>
+            <div className="text-xl sm:text-3xl font-bold text-gray-800">
+              {stats.total}
+            </div>
           </div>
           <div className="bg-yellow-50 p-4 sm:p-6 rounded-xl shadow border border-yellow-200">
-            <div className="text-yellow-700 text-xs sm:text-sm font-medium mb-1">Pending Review</div>
-            <div className="text-xl sm:text-3xl font-bold text-yellow-700">{stats.pending}</div>
+            <div className="text-yellow-700 text-xs sm:text-sm font-medium mb-1">
+              Pending Review
+            </div>
+            <div className="text-xl sm:text-3xl font-bold text-yellow-700">
+              {stats.pending}
+            </div>
           </div>
           <div className="bg-green-50 p-4 sm:p-6 rounded-xl shadow border border-green-200">
-            <div className="text-green-700 text-xs sm:text-sm font-medium mb-1">Approved</div>
-            <div className="text-xl sm:text-3xl font-bold text-green-700">{stats.approved}</div>
+            <div className="text-green-700 text-xs sm:text-sm font-medium mb-1">
+              Approved
+            </div>
+            <div className="text-xl sm:text-3xl font-bold text-green-700">
+              {stats.approved}
+            </div>
           </div>
           <div className="bg-red-50 p-4 sm:p-6 rounded-xl shadow border border-red-200">
-            <div className="text-red-700 text-xs sm:text-sm font-medium mb-1">Rejected</div>
-            <div className="text-xl sm:text-3xl font-bold text-red-700">{stats.rejected}</div>
+            <div className="text-red-700 text-xs sm:text-sm font-medium mb-1">
+              Rejected
+            </div>
+            <div className="text-xl sm:text-3xl font-bold text-red-700">
+              {stats.rejected}
+            </div>
           </div>
         </div>
 
@@ -156,7 +205,9 @@ const Startups = () => {
 
         {/* Applications Grid */}
         {error ? (
-          <div className="text-center text-red-600 bg-red-50 border border-red-200 py-4 rounded-xl">{error}</div>
+          <div className="text-center text-red-600 bg-red-50 border border-red-200 py-4 rounded-xl">
+            {error}
+          </div>
         ) : filteredApplications.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-xl shadow">
             <p className="text-gray-500 text-lg">No applications found</p>
@@ -164,41 +215,62 @@ const Startups = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {filteredApplications.map((app) => (
-              <div key={app._id} className="bg-white rounded-xl shadow hover:shadow-lg transition p-4 sm:p-6 flex flex-col justify-between">
+              <div
+                key={app._id}
+                className="bg-white rounded-xl shadow hover:shadow-lg transition p-4 sm:p-6 flex flex-col justify-between"
+              >
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-800">{app.companyName}</h3>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold border flex items-center gap-1 ${getStatusColor(app.status)}`}>
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-800">
+                      {app.companyName}
+                    </h3>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold border flex items-center gap-1 ${getStatusColor(
+                        app.status
+                      )}`}
+                    >
                       {getStatusIcon(app.status)}
                       {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
                     </span>
                   </div>
-                  <p className="text-gray-600 mb-3 text-sm sm:text-base line-clamp-2 sm:line-clamp-none">{app.productDescription || app.aboutStartup}</p>
+                  <p className="text-gray-600 mb-3 text-sm sm:text-base line-clamp-2 sm:line-clamp-none">
+                    {app.productDescription || app.aboutStartup}
+                  </p>
                   <div className="flex flex-col sm:flex-row flex-wrap gap-3 text-xs sm:text-sm text-gray-500">
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
-                      <span>Applied: {new Date(app.createdAt).toLocaleDateString("en-IN")}</span>
+                      <span>
+                        Applied:{" "}
+                        {new Date(app.createdAt).toLocaleDateString("en-IN")}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1 break-all">
                       <Mail className="w-4 h-4" />
                       <span>{app.founderEmail}</span>
                     </div>
                     <div>
-                      <span className="font-medium">Founder:</span> {app.founderName}
+                      <span className="font-medium">Founder:</span>{" "}
+                      {app.founderName}
                     </div>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
+                {/* ✅ Action Buttons */}
                 <div className="flex flex-col sm:flex-row md:flex-col gap-2 mt-4">
                   <button
                     onClick={() => handleStatusChange(app._id, "approved")}
                     disabled={app.status === "approved" || updatingId === app._id}
                     className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm sm:text-base transition ${
-                      app.status === "approved" ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-green-600 text-white hover:bg-green-700"
+                      app.status === "approved"
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-green-600 text-white hover:bg-green-700"
                     }`}
                   >
-                    {updatingId === app._id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    {updatingId === app._id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4" />
+                    )}
                     Approve
                   </button>
 
@@ -206,20 +278,39 @@ const Startups = () => {
                     onClick={() => handleStatusChange(app._id, "rejected")}
                     disabled={app.status === "rejected" || updatingId === app._id}
                     className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm sm:text-base transition ${
-                      app.status === "rejected" ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-red-600 text-white hover:bg-red-700"
+                      app.status === "rejected"
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-red-600 text-white hover:bg-red-700"
                     }`}
                   >
-                    {updatingId === app._id ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+                    {updatingId === app._id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <X className="w-4 h-4" />
+                    )}
                     Reject
                   </button>
 
-                  {/* ✅ Open Page Button */}
                   <button
-                    onClick={() => navigate(`/products/${app._id}`)}
+                    onClick={() => navigate(`/startup/${app._id}`)}
                     className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm sm:text-base bg-blue-600 text-white hover:bg-blue-700 transition"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    Open Page
+                    Open
+                  </button>
+
+                  {/* 🗑️ Delete */}
+                  <button
+                    onClick={() => handleDelete(app._id)}
+                    disabled={updatingId === app._id}
+                    className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm sm:text-base bg-gray-800 text-white hover:bg-black transition"
+                  >
+                    {updatingId === app._id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                    Delete
                   </button>
                 </div>
               </div>
