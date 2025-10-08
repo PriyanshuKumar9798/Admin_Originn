@@ -13,6 +13,7 @@ import Analytics from "./components/Analytics";
 import ProductDetails from "./components/ProductDetails";
 import AllStartupsPage from "./components/AllStartups";
 
+
 function App() {
   return (
     <Router>
@@ -34,6 +35,10 @@ function App() {
             path="startup-profile/:startupId"
             element={<StartupProfile />}
           />
+          <Route path="/startup/:id" element={<ProductDetails />} />
+
+
+
 
           <Route path="campaigns" element={<Campaigns />} />
           <Route path="content" element={<Content />} />
